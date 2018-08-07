@@ -98,28 +98,28 @@ bot.on('guildMemberAdd', member => {
 				 // 		}
 				 // 	}
 				 // });
-				 sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
-				 	[member.id, member.guild.id, foundServers, 'JOIN_SPOOF_WARN']);
-				 richEmbed=new Discord.RichEmbed().setColor('ff0000')
-				 .setDescription(user+' inserted into database to be warned.');
-				 return bot.WHCHAN.send(richEmbed).catch(console.error);
-				 setTimeout(function() {
-				 	foundServers='';
-				 	foundServers=checkUser(member.id);
-				 	if(foundServers){
-				 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
-				 			[member.id, member.guild.name, bot.Pound_Level]);
-				 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
-				 		.setDescription(user+' inserted into database to be kicked.');
-				 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-				 		return;
-				 	}
-				 	else{
-				 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
-				 			[member.id, member.guild.name, 'LEFT_SPOOF']);
-				 		return;
-				 	}
-				 }, 900000);
+				 // sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+				 // 	[member.id, member.guild.id, foundServers, 'JOIN_SPOOF_WARN']);
+				 // richEmbed=new Discord.RichEmbed().setColor('ff0000')
+				 // .setDescription(user+' inserted into database to be warned.');
+				 // return bot.WHCHAN.send(richEmbed).catch(console.error);
+				 // setTimeout(function() {
+				 // 	foundServers='';
+				 // 	foundServers=checkUser(member.id);
+				 // 	if(foundServers){
+				 // 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+				 // 			[member.id, member.guild.name, bot.Pound_Level]);
+				 // 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
+				 // 		.setDescription(user+' inserted into database to be kicked.');
+				 // 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+				 // 		return;
+				 // 	}
+				 // 	else{
+				 // 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+				 // 			[member.id, member.guild.name, 'LEFT_SPOOF']);
+				 // 		return;
+				 // 	}
+				 // }, 900000);
 			});
 		}
 		else{
@@ -131,28 +131,28 @@ bot.on('guildMemberAdd', member => {
 				.addField('Blacklisted Server(s):', foundServers, false)
 				.setFooter(bot.time());
 				bot.WHCHAN.send(richEmbed).catch(console.error).then(m => {
-					 sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
-					 	[member.id, member.guild.name, 'SPOOF_WARN']);
-					 richEmbed=new Discord.RichEmbed().setColor('ff0000')
-					 .setDescription(user+' inserted into database to be warned.');
-					 return bot.WHCHAN.send(richEmbed).catch(console.error);
-					 setTimeout(function() {
-					 	foundServers='';
-					 	foundServers=checkUser(member.id);
-					 	if(foundServers){
-					 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
-					 			[member.id, member.guild.name, bot.Pound_Level]);
-					 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
-					 		.setDescription(user+' inserted into database to be kicked.');
-					 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-					 		return;
-					 	}
-					 	else{
-					 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
-					 			[member.id, member.guild.name, 'LEFT_SPOOF']);
-					 		return;
-					 	}
-					 }, 900000);
+					 // sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+					 // 	[member.id, member.guild.name, 'SPOOF_WARN']);
+					 // richEmbed=new Discord.RichEmbed().setColor('ff0000')
+					 // .setDescription(user+' inserted into database to be warned.');
+					 // return bot.WHCHAN.send(richEmbed).catch(console.error);
+					 // setTimeout(function() {
+					 // 	foundServers='';
+					 // 	foundServers=checkUser(member.id);
+					 // 	if(foundServers){
+					 // 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+					 // 			[member.id, member.guild.name, bot.Pound_Level]);
+					 // 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
+					 // 		.setDescription(user+' inserted into database to be kicked.');
+					 // 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+					 // 		return;
+					 // 	}
+					 // 	else{
+					 // 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+					 // 			[member.id, member.guild.name, 'LEFT_SPOOF']);
+					 // 		return;
+					 // 	}
+					 // }, 900000);
 				});
 			}
 		}
