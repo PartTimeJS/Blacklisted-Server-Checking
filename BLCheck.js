@@ -2,18 +2,41 @@
 const Discord=require('discord.js');
 const bot=new Discord.Client({
 	disabledEvents: [
+		'GUILD_CREATE',
+		'GUILD_DELETE',
+		'GUILD_UPDATE',
+		'GUILD_MEMBER_UPDATE',
+		'GUILD_MEMBERS_CHUNK',
+		'GUILD_ROLE_CREATE',
+		'GUILD_ROLE_DELETE',
+		'GUILD_ROLE_UPDATE',
+		'GUILD_BAN_ADD',
+		'GUILD_BAN_REMOVE',
+		'CHANNEL_CREATE',
+		'CHANNEL_DELETE',
+		'CHANNEL_UPDATE',
+		'CHANNEL_PINS_UPDATE',
+		'MESSAGE_DELETE',
+		'MESSAGE_UPDATE',
+		'MESSAGE_DELETE_BULK',
+		'MESSAGE_REACTION_ADD',
+		'MESSAGE_REACTION_REMOVE',
+		'MESSAGE_REACTION_REMOVE_ALL',
+		'USER_UPDATE',
+		'USER_NOTE_UPDATE',
+		'USER_SETTINGS_UPDATE',
 		'PRESENCE_UPDATE',
 		'VOICE_STATE_UPDATE',
 		'TYPING_START',
-		'VOIVE_SERVER_UPDATE',
+		'VOICE_SERVER_UPDATE',
 		'RELATIONSHIP_ADD',
-		'RELATIONSHIP_REMOVE'
+		'RELATIONSHIP_REMOVE',
 	]
 });
-// const sql=require('sqlite');
+const sql=require('sqlite');
 const moment=require('moment');
 const config=require('./files/blacklist_config.json')
-// sql.open('./files/dataBase.sqlite');
+sql.open('./files/dataBase.sqlite');
 
 bot.Pound_Level=config.Pound_Level; bot.Command_Channel=config.Command_Channel
 bot.Webhook_ID=config.Webhook_ID; bot.Webhook_Token=config.Webhook_Token;
@@ -39,11 +62,12 @@ function checkUser(userID){
 	let botInServer='', userInServer='', foundServers='', index='';
 	let guilds=bot.guilds.map(g => g);
 	guilds.forEach((guild) => {
-		userInServer=guild.members.get(userID);
-		if(userInServer){foundServers+='`'+guild.name+'`,';}
+		if(guild.id!=bot.HOME_SERVER_ID){
+			userInServer=guild.members.get(userID);
+			if(userInServer){foundServers+='`'+guild.name+'`,';}
+		}
 	});
-	foundServers=foundServers.slice(0, -1).split(',').slice(1);
-	foundServers=foundServers.toString().replace(',','\n');
+	foundServers=foundServers.replace(',','\n');
 	return foundServers;
 }
 
@@ -51,6 +75,7 @@ bot.on('guildMemberAdd', member => {
 	if(bot.Whitelist.indexOf(member.id)>=0){return;}
 	let user=member.guild.members.get(member.id), timeNow=new Date().getTime(), joinTime=moment(timeNow).format('DD/MMM/YY');
 	let foundServers=checkUser(member.id), guild=member.guild, richEmbed='', uName='', spoofLog;
+
 	let userInHomeServer=bot.guilds.get(bot.HOME_SERVER_ID).members.get(member.id);
 	if(member.nickname){uName=member.nickname;}
 	else{uName=member.user.username}
@@ -58,78 +83,76 @@ bot.on('guildMemberAdd', member => {
 	else{
 		if(member.guild.id===bot.HOME_SERVER_ID && foundServers){
 			richEmbed=new Discord.RichEmbed().setColor('ff0000')
-			.setAuthor(uName+' is in Blacklisted Servers**', member.user.displayAvatarURL)
-			.addField('User:', '<@'+member.id+'>', true).addField('UserID:', member.id, true)
-			.addField('Blacklisted Servers:', foundServers, false)
+			.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+			.addField('New Member is in Blacklisted Servers.', foundServers, false)
 			.setFooter(bot.time());
 			bot.WHCHAN.send(richEmbed).catch(console.error).then(m => {
-				// sql.all(`SELECT * FROM user_history WHERE UserID='${member.id}`).then(rows => {
-				// 	for(rowNumber='0'; rowNumber<rows.length && rowNumber<10; rowNumber++){
-				// 		for(let fs=0;fs<foundServers.length;fs++){spoofLog=joinTime+','+member.guild.name+';'; fs++;}
-				// 		if(rows[rowNumber].SpoofHistory==null){
-				//
-				// 			sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-				// 				[member.id, member.guild.id, foundServers, 'JOIN_SPOOF_WARN']);
-				// 		}
-				// 		else{
-				//
-				// 		}
-				// 	}
-				// });
-				// sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-				// 	[member.id, member.guild.id, foundServers, 'JOIN_SPOOF_WARN']);
-				// richEmbed=new Discord.RichEmbed().setColor('ff0000')
-				// .setDescription(user+' is being warned.');
-				// return bot.WHCHAN.send(richEmbed).catch(console.error);
-				// setTimeout(function() {
-				// 	foundServers='';
-				// 	foundServers=checkUser(member.id);
-				// 	if(foundServers){
-				// 		sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-				// 			[member.id, member.guild.name, bot.Pound_Level]);
-				// 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
-				// 		.setDescription(user+' is being kicked.');
-				// 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-				// 		return;
-				// 	}
-				// 	else{
-				// 		sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-				// 			[member.id, member.guild.name, 'LEFT_SPOOF']);
-				// 		return;
-				// 	}
-				// }, 900000);
+				 // sql.all(`SELECT * FROM user_history WHERE UserID='${member.id}`).then(rows => {
+				 // 	for(rowNumber='0'; rowNumber<rows.length && rowNumber<10; rowNumber++){
+				 // 		for(let fs=0;fs<foundServers.length;fs++){spoofLog=joinTime+','+member.guild.name+';'; fs++;}
+				 // 		if(rows[rowNumber].SpoofHistory==null){
+				 // 			sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
+				 // 				[member.id, member.guild.id, foundServers, 'JOIN_SPOOF_WARN']);
+				 // 		}
+				 // 		else{
+				 // 		}
+				 // 	}
+				 // });
+				 sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+				 	[member.id, member.guild.id, foundServers, 'JOIN_SPOOF_WARN']);
+				 richEmbed=new Discord.RichEmbed().setColor('ff0000')
+				 .setDescription(user+' inserted into database to be warned.');
+				 return bot.WHCHAN.send(richEmbed).catch(console.error);
+				 setTimeout(function() {
+				 	foundServers='';
+				 	foundServers=checkUser(member.id);
+				 	if(foundServers){
+				 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+				 			[member.id, member.guild.name, bot.Pound_Level]);
+				 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
+				 		.setDescription(user+' inserted into database to be kicked.');
+				 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+				 		return;
+				 	}
+				 	else{
+				 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+				 			[member.id, member.guild.name, 'LEFT_SPOOF']);
+				 		return;
+				 	}
+				 }, 900000);
 			});
 		}
 		else{
 			if(foundServers){
 				richEmbed=new Discord.RichEmbed().setColor('ff0000')
-				.setAuthor(uName+' has joined a Blacklisted Server', member.user.displayAvatarURL)
+				.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+				.setTitle('Member has joined a Blacklisted Server.')
 				.addField('User:', '<@'+member.id+'>', true).addField('UserID:', member.id, true)
 				.addField('Blacklisted Server(s):', foundServers, false)
 				.setFooter(bot.time());
 				bot.WHCHAN.send(richEmbed).catch(console.error).then(m => {
-					// sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-					// 	[member.id, member.guild.name, 'SPOOF_WARN']);
-					// richEmbed=new Discord.RichEmbed().setColor('ff0000')
-					// .setDescription(user+' is being warned.');
-					// return bot.WHCHAN.send(richEmbed).catch(console.error);
-					// setTimeout(function() {
-					// 	foundServers='';
-					// 	foundServers=checkUser(member.id);
-					// 	if(foundServers){
-					// 		sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-					// 			[member.id, member.guild.name, bot.Pound_Level]);
-					// 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
-					// 		.setDescription(user+' is being kicked.');
-					// 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-					// 		return;
-					// 	}
-					// 	else{
-					// 		sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-					// 			[member.id, member.guild.name, 'LEFT_SPOOF']);
-					// 		return;
-					// 	}
-					// }, 900000);
+					 sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+					 	[member.id, member.guild.name, 'SPOOF_WARN']);
+					 richEmbed=new Discord.RichEmbed().setColor('ff0000')
+					 .setDescription(user+' inserted into database to be warned.');
+					 return bot.WHCHAN.send(richEmbed).catch(console.error);
+					 setTimeout(function() {
+					 	foundServers='';
+					 	foundServers=checkUser(member.id);
+					 	if(foundServers){
+					 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+					 			[member.id, member.guild.name, bot.Pound_Level]);
+					 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
+					 		.setDescription(user+' inserted into database to be kicked.');
+					 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+					 		return;
+					 	}
+					 	else{
+					 		sql.run(`INSERT INTO spoofninja (user_id, bad_guild_name, punishment) VALUES (?, ?, ?)`,
+					 			[member.id, member.guild.name, 'LEFT_SPOOF']);
+					 		return;
+					 	}
+					 }, 900000);
 				});
 			}
 		}
@@ -145,19 +168,17 @@ bot.on('guildMemberRemove', member => {
 	else{
 		if(foundServers){
 			richEmbed=new Discord.RichEmbed().setColor('ffa100')
-			.setAuthor(uName+' has left '+member.guild.name, member.user.displayAvatarURL)
-			.addField('User:', '<@'+member.id+'>', true)
-			.addField('UserID:', member.id, true)
-			.addField('Blacklisted Server(s):', foundServers, false)
+			.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+			.setTiele('Member has left '+member.guild.name)
+			.addField('Remaining Blacklisted Server(s):', foundServers, false)
 			.setFooter(bot.time());
 			return bot.WHCHAN.send(richEmbed).catch(console.error);
 		}
 		else{
 			if(!foundServers){
 				richEmbed=new Discord.RichEmbed().setColor('00ff00')
-				.setAuthor(uName+' has left all Blacklisted Servers', member.user.displayAvatarURL)
-				.addField('User:', '<@'+member.id+'>', true)
-				.addField('UserID:', member.id, true)
+				.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+				.setTitle('No longer a member of any Blacklisted Servers.')
 				.setFooter(bot.time());
 				return bot.WHCHAN.send(richEmbed).catch(console.error);
 			}
@@ -166,11 +187,10 @@ bot.on('guildMemberRemove', member => {
 });
 
 bot.on('message', message => {
-	let richEmbed='', badServer='';
+	if(message.channel.id!=bot.Command_Channel){return;}
 	if(!message.content.startsWith(bot.PREFIX)){return;}
-	if(message.channel.id!==bot.Command_Channel){return;}
+	let richEmbed='', badServer='', guild=message.member.guild, uName='';
 	if(message.member.roles.has(bot.AdminRoleID) || message.member.roles.has(bot.ModRoleID) || message.member.id===bot.OWNER_ID){
-		let guild=message.member.guild, uName='';
 		let args=message.content.split(' ').slice(1), command=message.content.split(' ')[0].slice(bot.PREFIX.length);
 		if(command==='status'){
 			richEmbed=new Discord.RichEmbed().setColor('00ff00')
@@ -185,67 +205,63 @@ bot.on('message', message => {
 				return bot.WHCHAN.send(richEmbed).catch(console.error);
 			}
 		}
-		// if(command=='warn'){
-		// 	let user=bot.guilds.get(message.guild.id).members.get(args[0]);
-		// 	if(!args[1]){
-		// 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
-		// 		.setAuthor('You forgot to add the name of the blacklisted server.');
-		// 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-		// 	}
-		// 	if(!args[2]){badServer=args[1];} else{for(let x=1; x<args.length; x++){ badServer+=args[x]+' '; } badServer=badServer.slice(0,-1); }
-		// 	if(!user){
-		// 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
-		// 		.setAuthor('Not a valid User ID. Please try again.');
-		// 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-		// 	}
-		// 	else{
-		// 		sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-		// 			[user.id, badServer, 'SPOOF_WARN']);
-		// 		richEmbed=new Discord.RichEmbed().setColor('00ff00')
-		// 		.setAuthor(user+' is being warned.');
-		// 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-		// 	}
-		// }
-		// if(command=='kick'){
-		// 	let user=bot.guilds.get(message.guild.id).members.get(args[0]);
-		// 	if(!args[1]){
-		// 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
-		// 		.setAuthor('You forgot to add the name of the blacklisted server.');
-		// 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-		// 	}
-		// 	if(!args[2]){badServer=args[1];} else{for(let x=1; x<args.length; x++){ badServer+=args[x]+' '; } badServer=badServer.slice(0,-1); }
-		// 	if(!user){
-		// 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
-		// 		.setAuthor('Not a valid User ID. Please try again.');
-		// 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-		// 	}
-		// 	else{
-		// 		sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
-		// 			[user.id, badServer, bot.Pound_Level]);
-		// 		richEmbed=new Discord.RichEmbed().setColor('00ff00')
-		// 		.setAuthor(user+' is being kicked.');
-		// 		return bot.WHCHAN.send(richEmbed).catch(console.error);
-		// 	}
-		// }
+		 if(command=='warn'){
+		 	let user=bot.guilds.get(message.guild.id).members.get(args[0]);
+		 	if(!args[1]){
+		 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
+		 		.setAuthor('You forgot to add the name of the blacklisted server.');
+		 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+		 	}
+		 	if(!args[2]){badServer=args[1];} else{for(let x=1; x<args.length; x++){ badServer+=args[x]+' '; } badServer=badServer.slice(0,-1); }
+		 	if(!user){
+		 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
+		 		.setAuthor('Not a valid User ID. Please try again.');
+		 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+		 	}
+		 	else{
+		 		sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
+		 			[user.id, badServer, 'SPOOF_WARN']);
+		 		richEmbed=new Discord.RichEmbed().setColor('00ff00')
+		 		.setAuthor(user+' is being warned.');
+		 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+		 	}
+		 }
+		 if(command=='kick'){
+		 	let user=bot.guilds.get(message.guild.id).members.get(args[0]);
+		 	if(!args[1]){
+		 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
+		 		.setAuthor('You forgot to add the name of the blacklisted server.');
+		 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+		 	}
+		 	if(!args[2]){badServer=args[1];} else{for(let x=1; x<args.length; x++){ badServer+=args[x]+' '; } badServer=badServer.slice(0,-1); }
+		 	if(!user){
+		 		richEmbed=new Discord.RichEmbed().setColor('ff0000')
+		 		.setAuthor('Not a valid User ID. Please try again.');
+		 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+		 	}
+		 	else{
+		 		sql.run(`INSERT INTO spoofninja (UserID, BadGuildName, Punishment) VALUES (?, ?, ?)`,
+		 			[user.id, badServer, bot.Pound_Level]);
+		 		richEmbed=new Discord.RichEmbed().setColor('00ff00')
+		 		.setAuthor(user+' is being kicked.');
+		 		return bot.WHCHAN.send(richEmbed).catch(console.error);
+		 	}
+		 }
 		if(command=='check'){
-			if(bot.Whitelist.indexOf(args[0])>=0){
-				richEmbed=new Discord.RichEmbed().setColor('ff0000').setDescription('That user is whitelisted.');
-				return bot.WHCHAN.send(richEmbed).catch(console.error);
-			}
 			let member=message.guild.members.get(args[0]), badMembers=0;
 			if(member){if(member.nickname){uName=member.nickname;}else{uName=member.user.username;}}
 			if(args[0]=='server' || args[0]=='all'){
 				let members=message.guild.members.map(m => m.id);
 				members.forEach(function(id,index){
-					if(bot.Whitelist.indexOf(id)<0){
+					if(bot.Whitelist.indexOf(id)<0 || args[1]=='sudo'){
 						let foundServers=checkUser(id);
 						if(foundServers){
 							badMembers++
 							member=message.guild.members.get(id); foundServers=foundServers.replace(/,/g,'\n');
 							if(member.nickname){uName=member.nickname;}else{uName=member.user.username}
 							richEmbed=new Discord.RichEmbed().setColor('ff0000')
-							.setAuthor(uName+' is in a Blacklisted Server', member.user.displayAvatarURL)
-							.addField('User:', '<@'+member.id+'>', true).addField('UserID:', member.id, true)
+							.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+							.setDescription('Tag: <@'+member.id+'>')
 							.addField('Blacklisted Server(s):', foundServers, false)
 							.setFooter(bot.time());
 							bot.WHCHAN.send(richEmbed).catch(console.error);
@@ -264,21 +280,25 @@ bot.on('message', message => {
 				}
 			}
 			else if(isNaN(args[0])==false && args[0].length==18){
+				if(bot.Whitelist.indexOf(args[0]) && args[1]!='sudo'){
+					richEmbed=new Discord.RichEmbed().setColor('ff0000').setAuthor('That user is whitelisted.');
+					return bot.WHCHAN.send(richEmbed).catch(console.error);
+				}
 				let foundServers=checkUser(args[0]);
 				if(member){
 					if(foundServers){
 						richEmbed=new Discord.RichEmbed().setColor('ff0000')
-						.setAuthor(uName+' is in a Blacklisted Server', member.user.displayAvatarURL)
-						.addField('User:', '<@'+member.id+'>', true).addField('UserID:', member.id, true)
-						.addField('Blacklisted Servers:', foundServers, false)
+						.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+						.setDescription('Tag: <@'+member.id+'>')
+						.addField('Blacklisted Server(s):', foundServers, false)
 						.setFooter(bot.time());
 						return bot.WHCHAN.send(richEmbed).catch(console.error);
 					}
 					else{
 						richEmbed=new Discord.RichEmbed().setColor('00ff00').setThumbnail(bot.APPROVED_IMG)
-						.setAuthor(uName+' appears to be a trustworthy member.', member.user.displayAvatarURL)
-						.setDescription('No memberships to blacklisted servers were found at this time.')
-						.addField('User:', '<@'+member.id+'>', true).addField('UserID:', member.id, true);
+						.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+						.setTitle('Not a member of any Blacklisted Servers.')
+						.setFooter(bot.time());
 						return bot.WHCHAN.send(richEmbed).catch(console.error);
 					}
 				}
@@ -286,16 +306,16 @@ bot.on('message', message => {
 					bot.fetchUser(args[0]).then(user => {
 						if(foundServers){
 							richEmbed=new Discord.RichEmbed().setColor('ff0000')
-							.setAuthor(uName+' is in a Blacklisted Server', member.user.displayAvatarURL)							.addField('User:', '<@'+user.id+'>', true).addField('UserID:', user.id, true)
-							.addField('Blacklisted Servers:', foundServers, false)
+							.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+							.addField('Blacklisted Server(s):', foundServers, false)
 							.setFooter(bot.time());
 							return bot.WHCHAN.send(richEmbed).catch(console.error);
 						}
 						else{
 							richEmbed=new Discord.RichEmbed().setColor('00ff00').setThumbnail(bot.APPROVED_IMG)
-							.setAuthor(uName+' appears to be trustworthy.', member.user.displayAvatarURL)
-							.setDescription('No memberships to blacklisted servers were found at this time.')
-							.addField('User:', '<@'+user.id+'>', true).addField('UserID:', user.id, true);
+							.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+							.setTitle('Not a member of any Blacklisted Servers.')
+							.setFooter(bot.time());
 							return bot.WHCHAN.send(richEmbed).catch(console.error);
 						}
 					});
