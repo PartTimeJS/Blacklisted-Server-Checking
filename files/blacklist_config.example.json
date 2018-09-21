@@ -1,0 +1,16 @@
+{
+  "Prefix": "!",
+  "User_Token": "",
+  "Bot_Token": "",
+  "Owner_ID": "",
+  "Home_Server_ID": "",
+  "Home_Server_Name": "",
+  "Pound_Level":"",
+  "Bot_Name": "",
+  "Command_Channel": "",
+  "Webhook_ID": "",
+  "Webhook_Token": "",
+  "AdminRoleID": "",
+  "ModRoleID": "",
+  "Whitelist": ""
+}
