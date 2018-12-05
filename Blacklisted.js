@@ -1,4 +1,5 @@
 'use strict';
+const sql=require('sqlite');
 const moment=require('moment');
 const tz=require('moment-timezone');
 const Discord=require('discord.js');
@@ -14,6 +15,7 @@ const USERBOT=new Discord.Client({disabledEvents: [
 	'MESSAGE_REACTION_REMOVE', 'MESSAGE_REACTION_REMOVE_ALL', 'USER_UPDATE', 'USER_NOTE_UPDATE', 'USER_SETTINGS_UPDATE',
 	'PRESENCE_UPDATE', 'VOICE_STATE_UPDATE', 'TYPING_START', 'VOICE_SERVER_UPDATE', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE'
 ]});
+sql.open('./files/dataBase.sqlite');
 
 USERBOT.Snipe_IMG='https://i.imgur.com/dzvklbi.png';
 USERBOT.Left_IMG='https://i.imgur.com/HVRacGU.jpg';
@@ -69,8 +71,8 @@ USERBOT.on('guildMemberAdd', member => {
 				.setFooter(postTime(CONFIG.Timezone));
 			EXECUTIONER.channels.get(CONFIG.Command_Channel).send(newMemberSpoof).catch(console.error).then( m => {
 				EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-					let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/fE3yYLz.jpg?1')
-						.setDescription('Glad to have you as a member of **'+CONFIG.Home_Server_Name+'**, but it looks like you are a member of spoofing or blacklisted servers. Please leave the following server(s) in the next **'+CONFIG.Minutes_Til_Punish+' minutes** if you wish to stay a member of **'+CONFIG.Home_Server_Name+'**. Please contact an Admin if you have any questions. Have a good day!\n**Blacklisted Server(s):**\n'+foundServers);
+					let configWarn=CONFIG.Joined_My_Server_While_In_Spoof_Servers_Warning.replace(/%SPOOFSERVER%/g, foundServers);
+					let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/fE3yYLz.jpg?1').setDescription(configWarn+'\n**Blacklisted Server(s):**\n'+foundServers);
 					TARGET.send(warnMessage).catch(console.error);
 					let warnConfirmation=new Discord.RichEmbed().setColor('00ff00')
 						.setDescription('Warned '+TARGET+'.');
@@ -90,8 +92,8 @@ USERBOT.on('guildMemberAdd', member => {
 							switch(CONFIG.Pound_Level){
 								case 'KICK':
 									EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-										let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1')
-											.setDescription('Sorry to see you go... You have been kicked from **'+CONFIG.Home_Server_Name+'** for not leaving `'+member.guild.name+'`. You are more than welcome to come back at any time if you leave `'+member.guild.name+'`. You can receive an invite back by going to <https://www.tallypokemap.tk>. Have a good day!');
+										let configKick=CONFIG.Kick_Message.replace(/%SPOOFSERVER%/g, foundServers);
+										let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configKick);
 										TARGET.send(kickMessage).catch(console.error).then( m => {
 											TARGET.kick('Member of a spoofing server.').catch(console.error);
 											let kickConfirmation=new Discord.RichEmbed().setColor('00ff00')
@@ -101,8 +103,8 @@ USERBOT.on('guildMemberAdd', member => {
 									}).catch(console.error); break;
 								case 'BAN':
 									EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-										let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1')
-											.setDescription('Sorry to see you go... You have been banned from **'+CONFIG.Home_Server_Name+'** for not leaving `'+member.guild.name+'`.');
+										let configBan=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers);
+										let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configBan);
 										TARGET.send(banMessage).catch(console.error).then( m => {
 											TARGET.ban('Member of a spoofing server.').catch(console.error);
 											let banConfirmation=new Discord.RichEmbed().setColor('00ff00')
@@ -118,9 +120,9 @@ USERBOT.on('guildMemberAdd', member => {
 						}
 						else{
 							EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-								let leftSpoof=new Discord.RichEmbed().setColor('00ff00').setThumbnail('https://i.imgur.com/UtIms4t.jpg')
-									.setDescription('Awesome, looks like you left the blacklisted server(s)! Please contact an Admin of **'+CONFIG.Home_Server_Name+'** if you have any questions. Have a good day!');
-								TARGET.send(leftSpoof).catch(console.error);
+								let configLeft=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers);
+								let leftMessage=new Discord.RichEmbed().setColor('00ff00').setThumbnail('https://i.imgur.com/UtIms4t.jpg').setDescription(configLeft);
+								TARGET.send(leftMessage).catch(console.error);
 							}).catch(console.error);
 						}
 					}
@@ -138,11 +140,10 @@ USERBOT.on('guildMemberAdd', member => {
 				EXECUTIONER.channels.get(CONFIG.Command_Channel).send(memberSpoofing).catch(console.error).then( m => {
 					// GET THE USER AND SEND THEM AN INITIAL WARNING
 					EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-						let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/gXw71sr.jpg?1')
-							.setDescription('Uh oh! Looks like you joined a spoofing/blacklisted server! Please leave **'+member.guild.name+'** in the next **'+CONFIG.Minutes_Til_Punish+' minutes** if you wish to stay a member of **'+CONFIG.Home_Server_Name+'**. Please contact an Admin if you have any questions. Have a good day!');
+						let configWarn=CONFIG.Joined_Spoof_Server_While_In_My_Server_Warning.replace(/%SPOOFSERVER%/g, foundServers);
+						let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/gXw71sr.jpg?1').setDescription(configWarn);
 						TARGET.send(warnMessage).catch(console.error);
-						let warnConfirmation=new Discord.RichEmbed().setColor('00ff00')
-							.setDescription('Warned '+TARGET+'.');
+						let warnConfirmation=new Discord.RichEmbed().setColor('00ff00') .setDescription('Warned '+TARGET+'.');
 						EXECUTIONER.channels.get(CONFIG.Command_Channel).send(warnConfirmation).catch(console.error);
 					}).catch(console.error);
 					// CHECK AGAIN IN AFTER A PERIOD OF TIME DETERMINED IN THE CONFIG
@@ -150,8 +151,7 @@ USERBOT.on('guildMemberAdd', member => {
 						// CHECK IF THE USER LEFT MY SERVER
 						let stillMember=USERBOT.guilds.get(CONFIG.Home_Server_ID).members.get(member.id);
 						if(!stillMember){
-							let leftMessage=new Discord.RichEmbed().setColor('00ff00')
-								.setDescription(uName+' has decided to leave our server.');
+							let leftMessage=new Discord.RichEmbed().setColor('00ff00').setDescription(uName+' has decided to leave our server.');
 							return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(leftMessage).catch(console.error);
 						}
 						else{
@@ -161,23 +161,21 @@ USERBOT.on('guildMemberAdd', member => {
 								switch(CONFIG.Pound_Level){
 									case 'KICK':
 										EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-											let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1')
-				 								.setDescription('Sorry to see you go... You have been kicked from **'+CONFIG.Home_Server_Name+'** for not leaving **'+member.guild.name+'**. You are more than welcome to come back at any time if you leave **'+member.guild.name+'**. You can receive an invite back by going to <https://www.tallypokemap.tk>. Have a good day!');
+											let configKick=CONFIG.Kick_Message.replace(/%SPOOFSERVER%/g, foundServers);
+											let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configKick);
 											TARGET.send(kickMessage).catch(console.error).then( m => {
 												TARGET.kick('Member of a spoofing server.').catch(console.error);
-												let kickConfirmation=new Discord.RichEmbed().setColor('00ff00')
-													.setDescription('Kicked '+TARGET+'.');
+												let kickConfirmation=new Discord.RichEmbed().setColor('00ff00') .setDescription('Kicked '+TARGET+'.');
 												return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(kickConfirmation).catch(console.error);
 											});
 										}).catch(console.error); break;
 									case 'BAN':
-										let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1')
-		 									.setDescription('Sorry to see you go... You have been banned from **'+CONFIG.Home_Server_Name+'** for not leaving **'+member.guild.name+'**.');
+										let configBan=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers);
+										let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configBan);
 										EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
 											TARGET.send(banMessage).catch(console.error).then( m => {
 												TARGET.ban('Member of a spoofing server.').catch(console.error);
-			 									let banConfirmation=new Discord.RichEmbed().setColor('00ff00')
-			 										.setDescription('Banned '+TARGET+'.');
+			 									let banConfirmation=new Discord.RichEmbed().setColor('00ff00').setDescription('Banned '+TARGET+'.');
 												return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(banConfirmation).catch(console.error);
 											});
 										}).catch(console.error); break;
@@ -190,9 +188,9 @@ USERBOT.on('guildMemberAdd', member => {
 	 					 	else{
 								// SEND CONFIRMATION THAT THEY HAVE LEFT THE SPOOF SERVER
 	 							EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-									let leftSpoof=new Discord.RichEmbed().setColor('00ff00').setThumbnail('https://i.imgur.com/UtIms4t.jpg')
-		 						 		.setDescription('Awesome, looks like you left **'+foundServers+'**! Please contact an Admin of **'+CONFIG.Home_Server_Name+'** if you have any questions. Have a good day!');
-									TARGET.send(leftSpoof).catch(console.error);
+									let configLeft=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers);
+									let leftMessage=new Discord.RichEmbed().setColor('00ff00').setThumbnail('https://i.imgur.com/UtIms4t.jpg').setDescription(configLeft);
+									TARGET.send(leftMessage).catch(console.error);
 								}).catch(console.error);
 	 					 	}
 						}
