@@ -17,4 +17,5 @@ This bot will automatically monitor users onjoin to your server as well as all o
 Screenshots:
 
 User was warned instantly and left immediately.
+
 ![Spoofer2](/files/Photo2.png)
