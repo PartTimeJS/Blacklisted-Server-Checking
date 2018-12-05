@@ -16,6 +16,6 @@ This bot will automatically monitor users onjoin to your server as well as all o
 
 Screenshots:
 
-![alt text](https://imgur.com/hG1yxFD)
+![Spoofer1](https://imgur.com/hG1yxFD)
 
-![alt text](https://imgur.com/AnYi761)
+![Spoofer2](https://imgur.com/AnYi761)
