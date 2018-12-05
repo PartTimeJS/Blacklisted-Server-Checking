@@ -16,6 +16,6 @@ This bot will automatically monitor users onjoin to your server as well as all o
 
 Screenshots:
 
-![Spoofer1](/files/Photo1)
+![Spoofer1](/files/Photo1.png)
 
-![Spoofer2](/files/Photo2)
+![Spoofer2](/files/Photo2.png)
