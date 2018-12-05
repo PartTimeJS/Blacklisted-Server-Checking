@@ -17,6 +17,5 @@ This bot will automatically monitor users onjoin to your server as well as all o
 
 Screenshots:
 
-User was warned instantly and left immediately.
-
+Example of a user being warned instantly and left the blacklisted server immediately.\n
 ![Spoofer2](/files/Photo2.png)
