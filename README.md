@@ -14,3 +14,8 @@ Commands:
 
 This bot will automatically monitor users onjoin to your server as well as all of the blacklisted servers. It does not do a check on start-up, so you will need to run a `check all` once started. As long as it is running, it is watching. 
 
+Screenshots:
+
+![alt text](https://imgur.com/hG1yxFD)
+
+![alt text](https://imgur.com/AnYi761)
