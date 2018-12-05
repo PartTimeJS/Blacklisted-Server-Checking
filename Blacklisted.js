@@ -247,7 +247,7 @@ USERBOT.on('message', message => {
 			if(!args[0]){
 				richEmbed=new Discord.RichEmbed().setColor('00ff00')
 					.setTitle('**Available Commands**').setThumbnail(USERBOT.LEFT_IMG)
-					.setDescription('`'+CONFIG.Prefix+'check @mention or userid`\n`'+CONFIG.Prefix+'check @JohnDoe#1234`\n`'+CONFIG.Prefix+'check server`\n`'+CONFIG.Prefix+'check 237597448032354304`\n');
+					.setDescription('`'+CONFIG.Prefix+'check @mention or userid`\n`'+CONFIG.Prefix+'check @JohnDoe#1234`\n`'+CONFIG.Prefix+'check 237597448032354304`\n`'+CONFIG.Prefix+'check all`\n`'+CONFIG.Prefix+'check all sudo`\n');
 				return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
 			}
 		}
