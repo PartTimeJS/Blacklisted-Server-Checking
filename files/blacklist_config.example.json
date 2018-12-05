@@ -12,5 +12,11 @@
   "Webhook_Token": "",
   "AdminRoleID": "",
   "ModRoleID": "",
-  "Whitelist": ""
+  "Whitelist": "",
+  "Joined_My_Server_While_In_Spoof_Servers_Warning": "Glad to have you as a member of **%MYSERVER%**, but it looks like you are a member of spoofing or blacklisted servers. Please leave the following server(s) in the next **%TIMETILPUNISH% minutes** if you wish to stay a member of **%MYSERVER%**. Please contact an Admin if you have any questions. Have a good day!",
+  "Joined_Spoof_Server_While_In_My_Server_Warning": "Uh oh! Looks like you joined a spoofing/blacklisted server! Please leave **%SPOOFSERVER%** in the next **%TIMETILPUNISH% minutes** if you wish to stay a member of **%MYSERVER%**. Please contact an Admin if you have any questions. Have a good day!",
+  "Kicked_Message": "Sorry to see you go... You have been kicked from **%MYSERVER%** for not leaving **%SPOOFSERVER%**. You are more than welcome to come back at any time if you leave **%SPOOFSERVER%**. You can receive an invite back by going to <https://www.tallypokemap.tk>. Have a good day!",
+  "Banned_Message": "Sorry to see you go... You have been banned from **'+CONFIG.Home_Server_Name+'** for not leaving **%SPOOFSERVER%**.",
+  "Left_Spoof_Message": "'Awesome, looks like you left **%SPOOFSERVER%**! Please contact an Admin of **%MYSERVER%** if you have any questions. Have a good day!'"
+
 }
