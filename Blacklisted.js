@@ -1,5 +1,4 @@
 'use strict';
-const sql=require('sqlite');
 const moment=require('moment');
 const tz=require('moment-timezone');
 const Discord=require('discord.js');
@@ -15,7 +14,6 @@ const USERBOT=new Discord.Client({disabledEvents: [
 	'MESSAGE_REACTION_REMOVE', 'MESSAGE_REACTION_REMOVE_ALL', 'USER_UPDATE', 'USER_NOTE_UPDATE', 'USER_SETTINGS_UPDATE',
 	'PRESENCE_UPDATE', 'VOICE_STATE_UPDATE', 'TYPING_START', 'VOICE_SERVER_UPDATE', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE'
 ]});
-sql.open('./files/dataBase.sqlite');
 
 USERBOT.Snipe_IMG='https://i.imgur.com/dzvklbi.png';
 USERBOT.Left_IMG='https://i.imgur.com/HVRacGU.jpg';
@@ -92,7 +90,7 @@ USERBOT.on('guildMemberAdd', member => {
 							switch(CONFIG.Pound_Level){
 								case 'KICK':
 									EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-										let configKick=CONFIG.Kick_Message.replace(/%SPOOFSERVER%/g, foundServers);
+										let configKick=CONFIG.Kicked_Message.replace(/%SPOOFSERVER%/g, foundServers);
 										let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configKick);
 										TARGET.send(kickMessage).catch(console.error).then( m => {
 											TARGET.kick('Member of a spoofing server.').catch(console.error);
@@ -103,7 +101,7 @@ USERBOT.on('guildMemberAdd', member => {
 									}).catch(console.error); break;
 								case 'BAN':
 									EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-										let configBan=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers);
+										let configBan=CONFIG.Banned_Message.replace(/%SPOOFSERVER%/g, foundServers);
 										let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configBan);
 										TARGET.send(banMessage).catch(console.error).then( m => {
 											TARGET.ban('Member of a spoofing server.').catch(console.error);
@@ -161,7 +159,7 @@ USERBOT.on('guildMemberAdd', member => {
 								switch(CONFIG.Pound_Level){
 									case 'KICK':
 										EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-											let configKick=CONFIG.Kick_Message.replace(/%SPOOFSERVER%/g, foundServers);
+											let configKick=CONFIG.Kicked_Message.replace(/%SPOOFSERVER%/g, foundServers);
 											let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configKick);
 											TARGET.send(kickMessage).catch(console.error).then( m => {
 												TARGET.kick('Member of a spoofing server.').catch(console.error);
@@ -170,7 +168,7 @@ USERBOT.on('guildMemberAdd', member => {
 											});
 										}).catch(console.error); break;
 									case 'BAN':
-										let configBan=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers);
+										let configBan=CONFIG.Banned_Message.replace(/%SPOOFSERVER%/g, foundServers);
 										let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configBan);
 										EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
 											TARGET.send(banMessage).catch(console.error).then( m => {
