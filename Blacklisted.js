@@ -1,5 +1,4 @@
 'use strict';
-const sql=require('sqlite');
 const moment=require('moment');
 const tz=require('moment-timezone');
 const Discord=require('discord.js');
@@ -15,7 +14,6 @@ const USERBOT=new Discord.Client({disabledEvents: [
 	'MESSAGE_REACTION_REMOVE', 'MESSAGE_REACTION_REMOVE_ALL', 'USER_UPDATE', 'USER_NOTE_UPDATE', 'USER_SETTINGS_UPDATE',
 	'PRESENCE_UPDATE', 'VOICE_STATE_UPDATE', 'TYPING_START', 'VOICE_SERVER_UPDATE', 'RELATIONSHIP_ADD', 'RELATIONSHIP_REMOVE'
 ]});
-sql.open('./files/dataBase.sqlite');
 
 USERBOT.Snipe_IMG='https://i.imgur.com/dzvklbi.png';
 USERBOT.Left_IMG='https://i.imgur.com/HVRacGU.jpg';
