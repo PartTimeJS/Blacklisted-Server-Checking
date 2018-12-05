@@ -8,7 +8,7 @@ Fill out `blacklist_config.json.example` in files and rename to `blacklist_confi
 
 All Commands must be preceeding by the command prefix in your config file and in the specified channel.
 Commands: 
->help -> lists commands you can use
->check all -> Checks all users in your server for membership to blacklisted servers.
->check all sudo -> Checks all users and ignores your whitelist.
+- `help` -> lists commands you can use
+- `check all` -> Checks all users in your server for membership to blacklisted servers.
+- `check all sudo` -> Checks all users and ignores your whitelist.
 
