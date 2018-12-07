@@ -15,6 +15,7 @@
   - `npm install moment-timezone`
   - `npm install discord.js`
   - `npm install pm2`
+
 7: Start the script using `pm2 start Blacklisted.js`
 
 All Commands must be preceeding by the command prefix in your config file and in the specified channel.
