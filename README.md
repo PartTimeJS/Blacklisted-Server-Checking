@@ -9,7 +9,7 @@
 
 3: Install node.js if not alread on your machine. 
 
-4: `git clone https://github.com/RussellG89/Blacklisted-Server-Checking.git`
+4: Run `git clone https://github.com/RussellG89/Blacklisted-Server-Checking.git` in your terminal.
 
 5: cd to the cloned directory
 
