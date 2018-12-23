@@ -19,12 +19,11 @@ USERBOT.Snipe_IMG='https://i.imgur.com/dzvklbi.png';
 USERBOT.Left_IMG='https://i.imgur.com/HVRacGU.jpg';
 USERBOT.Approved_IMG='https://i.imgur.com/LVlq97j.png';
 
-EXECUTIONER.on('ready', () => {
-	console.info('Executioner is ready to enact your will.');
-});
+EXECUTIONER.on('ready', () => { console.info('[Blacklist] Executioner is ready to enact your will.'); });
 
 USERBOT.on('ready', () => {
-	console.info('Now Checking '+USERBOT.guilds.size+' Blacklisted Servers.');
+	let guilds=USERBOT.guilds.size-CONFIG.Home_Server_IDs.length;
+	console.info('[Blacklist] Now Checking '+guilds+' Blacklisted Servers.');
 	USERBOT.user.setPresence({'status':'invisible'});
 });
 
@@ -37,314 +36,364 @@ function postTime(timezone){
 
 // CHECK THE USER FOR SPOOF SERVERS
 function checkUser(userID){
-	let botInServer='', userInServer='', foundServers='', index='';
-	let guilds=USERBOT.guilds.map(g => g);
-	guilds.forEach((guild) => {
-		if(guild.id!=CONFIG.Home_Server_ID){
-			userInServer=guild.members.get(userID);
-			if(userInServer){foundServers+='`'+guild.name+'`\n';}
-		}
+	return new Promise(function(resolve, reject) {
+		let foundServers='', num=0;
+		let guilds=USERBOT.guilds.map(g => g);
+		guilds.forEach((guild) => {
+			if(CONFIG.Home_Server_IDs.indexOf(guild.id)<0){
+				let isMember=guild.members.get(userID); num++
+				if(isMember){ foundServers+='`'+guild.name+'`,'; }
+			}
+		});
+		if(num>1){ foundServers=foundServers.replace(/,/g,'\n').slice(0,-1); }
+		else{ foundServers=foundServers.slice(0,-1); }
+		resolve(foundServers);
 	});
-	foundServers=foundServers.replace(',','\n');
-	return foundServers;
 }
 
 USERBOT.on('guildMemberAdd', member => {
 	// IGNORE IF THEY USER IS ON THE WHITELIST
 	if(CONFIG.Whitelist.indexOf(member.id)>=0){ return; }
-	// VARIABLES DECLARATION
-	let timeNow=new Date().getTime(), joinTime=moment(timeNow).format('DD/MMM/YY'),
-	foundServers=checkUser(member.id), guild=member.guild, richEmbed='', uName='', spoofLog,
-	userInHomeServer=USERBOT.guilds.get(CONFIG.Home_Server_ID).members.get(member.id);
-	// GET NICKNAME OR USE USERNAME
-	if(member.nickname){ uName=member.nickname; }	else{ uName=member.user.username; }
-	// IGNORE IF USER IS NOT IN MY SERVER
-	if(!userInHomeServer){ return; }
-	else{
-		// USER JOINED MY SERVER AND IS IN SPOOF SERVERS
-		if(member.guild.id==CONFIG.Home_Server_ID && foundServers){
-			let newMemberSpoof=new Discord.RichEmbed().setColor('ff0000')
-				.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
-				.addField('New Member is in Blacklisted Servers.', foundServers, false)
-				.setFooter(postTime(CONFIG.Timezone));
-			EXECUTIONER.channels.get(CONFIG.Command_Channel).send(newMemberSpoof).catch(console.error).then( m => {
-				EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-					let configWarn=CONFIG.Joined_My_Server_While_In_Spoof_Servers_Warning.replace(/%SPOOFSERVER%/g, foundServers);
-					let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/fE3yYLz.jpg?1').setDescription(configWarn+'\n**Blacklisted Server(s):**\n'+foundServers);
-					TARGET.send(warnMessage).catch(console.error);
-					let warnConfirmation=new Discord.RichEmbed().setColor('00ff00')
-						.setDescription('Warned '+TARGET+'.');
-					EXECUTIONER.channels.get(CONFIG.Command_Channel).send(warnConfirmation).catch(console.error);
-				}).catch(console.error);
-				// CHECK AGAIN IN AFTER A PERIOD OF TIME DETERMINED IN THE CONFIG
-				setTimeout(function(){
-					let stillMember=USERBOT.guilds.get(CONFIG.Home_Server_ID).members.get(member.id);
-					if(!stillMember){
-						let leftMessage=new Discord.RichEmbed().setColor('00ff00')
-							.setDescription(uName+' has decided to leave our server.');
-						return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(leftMessage).catch(console.error);
-					}
-					else{
-						foundServers=''; foundServers=checkUser(member.id);
-						if(foundServers){
-							switch(CONFIG.Pound_Level){
-								case 'KICK':
-									EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-										let configKick=CONFIG.Kicked_Message.replace(/%SPOOFSERVER%/g, foundServers);
-										let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configKick);
-										TARGET.send(kickMessage).catch(console.error).then( m => {
-											TARGET.kick('Member of a spoofing server.').catch(console.error);
-											let kickConfirmation=new Discord.RichEmbed().setColor('00ff00')
-												.setDescription('Kicked '+TARGET+'.');
-											return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(kickConfirmation).catch(console.error);
-										});
-									}).catch(console.error); break;
-								case 'BAN':
-									EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-										let configBan=CONFIG.Banned_Message.replace(/%SPOOFSERVER%/g, foundServers);
-										let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configBan);
-										TARGET.send(banMessage).catch(console.error).then( m => {
-											TARGET.ban('Member of a spoofing server.').catch(console.error);
-											let banConfirmation=new Discord.RichEmbed().setColor('00ff00')
-												.setDescription('Banned '+TARGET+'.');
-											return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(banConfirmation).catch(console.error);
-										});
-									}).catch(console.error);
-								default:
-									EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-										return;
-									}).catch(console.error); break;
+
+	// CHECK EACH HOME SERVER
+	CONFIG.Home_Server_IDs.forEach((guildID,index) => {
+
+		// CHECK IF THE USER IS A GUILDMEMBER
+		let guildMember=USERBOT.guilds.get(guildID).members.get(member.id);
+		if(guildMember){
+			checkUser(member.id).then(function(foundServers){
+				let timeNow=new Date().getTime(), joinTime=moment(timeNow).format('DD/MMM/YY'), uName='', spoofLog;
+
+				// GET NICKNAME OR USE USERNAME
+				if(member.nickname){ uName=member.nickname; }	else{ uName=member.user.username; }
+
+				// USER JOINED MY SERVER AND IS IN SPOOF SERVERS
+				if(CONFIG.Home_Server_IDs.indexOf(member.guild.id)>=0 && foundServers){
+					let newMemberSpoof=new Discord.RichEmbed().setColor('ff0000')
+						.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+						.addField('New Member is in Blacklisted Servers.', foundServers, false)
+						.setFooter(postTime(CONFIG.Timezone));
+					EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(newMemberSpoof).catch(console.error).then( m => {
+
+						// FETCH THE MEMBER AND SEND WARNING MESSAGE
+						EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+							let configWarn=CONFIG.Joined_My_Server_While_In_Spoof_Servers_Warning.replace(/%SPOOFSERVER%/g, foundServers).replace(/%SERVERNAME%/g, CONFIG.Home_Server_Names[index]);
+							let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/fE3yYLz.jpg?1').setDescription(configWarn+'\n**Blacklisted Server(s):**\n'+foundServers);
+							TARGET.send(warnMessage).catch(console.error);
+							let warnConfirmation=new Discord.RichEmbed().setColor('00ff00')
+								.setDescription('Warned '+TARGET+'.')
+								.setFooter(postTime(CONFIG.Timezone));
+							EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(warnConfirmation).catch(console.error);
+						}).catch(console.error);
+
+						// CHECK AGAIN IN AFTER A PERIOD OF TIME DETERMINED IN THE CONFIG
+						setTimeout(function(){
+							let stillMember=USERBOT.guilds.get(guildID).members.get(member.id);
+							if(!stillMember){
+								let leftMessage=new Discord.RichEmbed().setColor('00ff00')
+									.setDescription(uName+' has decided to leave our server.')
+									.setFooter(postTime(CONFIG.Timezone));
+								EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(leftMessage).catch(console.error);
 							}
-						}
-						else{
-							EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-								let configLeft=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers);
-								let leftMessage=new Discord.RichEmbed().setColor('00ff00').setThumbnail('https://i.imgur.com/UtIms4t.jpg').setDescription(configLeft);
-								TARGET.send(leftMessage).catch(console.error);
-							}).catch(console.error);
-						}
-					}
-			 	}, 60000 * CONFIG.Minutes_Til_Punish);
-			}).catch(console.error);
-		}
-		else{
-			// USER IS A MEMBER OF MY SERVER AND JOINED A SPOOF SERVER
-			if(foundServers){
-				let memberSpoofing=new Discord.RichEmbed().setColor('ff0000')
-					.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
-					.setTitle('Member has joined a Blacklisted Server.')
-					.addField('Blacklisted Server(s):', foundServers, false)
-					.setFooter(postTime(CONFIG.Timezone));
-				EXECUTIONER.channels.get(CONFIG.Command_Channel).send(memberSpoofing).catch(console.error).then( m => {
-					// GET THE USER AND SEND THEM AN INITIAL WARNING
-					EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-						let configWarn=CONFIG.Joined_Spoof_Server_While_In_My_Server_Warning.replace(/%SPOOFSERVER%/g, foundServers);
-						let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/gXw71sr.jpg?1').setDescription(configWarn);
-						TARGET.send(warnMessage).catch(console.error);
-						let warnConfirmation=new Discord.RichEmbed().setColor('00ff00') .setDescription('Warned '+TARGET+'.');
-						EXECUTIONER.channels.get(CONFIG.Command_Channel).send(warnConfirmation).catch(console.error);
-					}).catch(console.error);
-					// CHECK AGAIN IN AFTER A PERIOD OF TIME DETERMINED IN THE CONFIG
-					setTimeout(function() {
-						// CHECK IF THE USER LEFT MY SERVER
-						let stillMember=USERBOT.guilds.get(CONFIG.Home_Server_ID).members.get(member.id);
-						if(!stillMember){
-							let leftMessage=new Discord.RichEmbed().setColor('00ff00').setDescription(uName+' has decided to leave our server.');
-							return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(leftMessage).catch(console.error);
-						}
-						else{
-							foundServers=''; foundServers=checkUser(member.id);
-							// KICK OR BAN THEM IF THEY ARE STILL IN A SPOOF SERVER
-	 					 	if(foundServers){
-								switch(CONFIG.Pound_Level){
-									case 'KICK':
-										EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-											let configKick=CONFIG.Kicked_Message.replace(/%SPOOFSERVER%/g, foundServers);
-											let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configKick);
-											TARGET.send(kickMessage).catch(console.error).then( m => {
-												TARGET.kick('Member of a spoofing server.').catch(console.error);
-												let kickConfirmation=new Discord.RichEmbed().setColor('00ff00') .setDescription('Kicked '+TARGET+'.');
-												return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(kickConfirmation).catch(console.error);
-											});
-										}).catch(console.error); break;
-									case 'BAN':
-										let configBan=CONFIG.Banned_Message.replace(/%SPOOFSERVER%/g, foundServers);
-										let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configBan);
-										EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-											TARGET.send(banMessage).catch(console.error).then( m => {
-												TARGET.ban('Member of a spoofing server.').catch(console.error);
-			 									let banConfirmation=new Discord.RichEmbed().setColor('00ff00').setDescription('Banned '+TARGET+'.');
-												return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(banConfirmation).catch(console.error);
-											});
-										}).catch(console.error); break;
-									default:
-										EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-											return;
+							else{
+								foundServers='';
+								checkUser(member.id).then(function(foundServers){
+									if(foundServers){
+										switch(CONFIG.Pound_Level){
+											case 'KICK':
+
+												// KICK THE USER
+												EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+													let configKick=CONFIG.Kicked_Message.replace(/%SPOOFSERVER%/g, foundServers).replace(/%SERVERNAME%/g, CONFIG.Home_Server_Names[index]);
+													let kickMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configKick);
+													TARGET.send(kickMessage).catch(console.error).then( m => {
+														TARGET.kick('Member of a spoofing server.').catch(console.error);
+														let kickConfirmation=new Discord.RichEmbed().setColor('00ff00')
+															.setDescription('Kicked '+TARGET+'.')
+															.setFooter(postTime(CONFIG.Timezone));
+														return EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(kickConfirmation).catch(console.error);
+													});
+												}).catch(console.error); break;
+											case 'BAN':
+												EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+													let configBan=CONFIG.Banned_Message.replace(/%SPOOFSERVER%/g, foundServers).replace(/%SERVERNAME%/g, CONFIG.Home_Server_Names[index]);
+													let banMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1').setDescription(configBan);
+													TARGET.send(banMessage).catch(console.error).then( m => {
+														TARGET.ban('Member of a spoofing server.').catch(console.error);
+														let banConfirmation=new Discord.RichEmbed().setColor('00ff00')
+															.setDescription('Banned '+TARGET+'.')
+															.setFooter(postTime(CONFIG.Timezone));
+														return EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(banConfirmation).catch(console.error);
+													});
+												}).catch(console.error);
+											default:
+												EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+													return;
+												}).catch(console.error); break;
+										}
+									}
+									else{
+										EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+											let configLeft=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers).replace(/%SERVERNAME%/g, CONFIG.Home_Server_Names[index]);
+											let leftMessage=new Discord.RichEmbed().setColor('00ff00').setThumbnail('https://i.imgur.com/UtIms4t.jpg').setDescription(configLeft);
+											TARGET.send(leftMessage).catch(console.error);
 										}).catch(console.error);
+									}
+								});
+							}
+						}, 60000 * CONFIG.Minutes_Til_Punish);
+					}).catch(console.error);
+				}
+				else{
+					// USER IS A MEMBER OF MY SERVER AND JOINED A SPOOF SERVER
+					if(foundServers){
+						let memberSpoofing=new Discord.RichEmbed().setColor('ff0000')
+							.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+							.setTitle('Member has joined a Blacklisted Server.')
+							.addField('Blacklisted Server(s):', foundServers, false)
+							.setFooter(postTime(CONFIG.Timezone));
+						EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(memberSpoofing).catch(console.error).then( m => {
+							// GET THE USER AND SEND THEM AN INITIAL WARNING
+							EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+								let configWarn=CONFIG.Joined_Spoof_Server_While_In_My_Server_Warning.replace(/%SPOOFSERVER%/g, foundServers).replace(/%SERVERNAME%/g, CONFIG.Home_Server_Names[index]);
+								let warnMessage=new Discord.RichEmbed().setColor('ff0000')
+									.setThumbnail('https://i.imgur.com/gXw71sr.jpg?1')
+									.setDescription(configWarn)
+									.setFooter(postTime(CONFIG.Timezone));
+								TARGET.send(warnMessage).catch(console.error);
+								let warnConfirmation=new Discord.RichEmbed().setColor('00ff00')
+									.setDescription('Warned '+TARGET+'.')
+									.setFooter(postTime(CONFIG.Timezone));
+								EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(warnConfirmation).catch(console.error);
+							}).catch(console.error);
+							// CHECK AGAIN IN AFTER A PERIOD OF TIME DETERMINED IN THE CONFIG
+							setTimeout(function() {
+								// CHECK IF THE USER LEFT MY SERVER
+								let stillMember=USERBOT.guilds.get(guildID).members.get(member.id);
+								if(!stillMember){
+									let leftMessage=new Discord.RichEmbed().setColor('00ff00').setDescription(uName+' has decided to leave our server.');
+									return EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(leftMessage).catch(console.error);
 								}
-	 					 	}
-	 					 	else{
-								// SEND CONFIRMATION THAT THEY HAVE LEFT THE SPOOF SERVER
-	 							EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(member.id).then( TARGET => {
-									let configLeft=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers);
-									let leftMessage=new Discord.RichEmbed().setColor('00ff00').setThumbnail('https://i.imgur.com/UtIms4t.jpg').setDescription(configLeft);
-									TARGET.send(leftMessage).catch(console.error);
-								}).catch(console.error);
-	 					 	}
-						}
-					}, 60000 * CONFIG.Minutes_Til_Punish);
-				});
-			}
+								else{
+									foundServers='';
+									checkUser(member.id).then(function(foundServers){
+										// KICK OR BAN THEM IF THEY ARE STILL IN A SPOOF SERVER
+										if(foundServers){
+											switch(CONFIG.Pound_Level){
+												case 'KICK':
+													EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+														let configKick=CONFIG.Kicked_Message.replace(/%SPOOFSERVER%/g, foundServers).replace(/%SERVERNAME%/g, CONFIG.Home_Server_Names[index]);
+														let kickMessage=new Discord.RichEmbed().setColor('ff0000')
+															.setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1')
+															.setDescription(configKick)
+															.setFooter(postTime(CONFIG.Timezone));
+														TARGET.send(kickMessage).catch(console.error).then( m => {
+															TARGET.kick('Member of a spoofing server.').catch(console.error);
+															let kickConfirmation=new Discord.RichEmbed().setColor('00ff00')
+																.setDescription('Kicked '+TARGET+'.')
+																.setFooter(postTime(CONFIG.Timezone));
+															return EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(kickConfirmation).catch(console.error);
+														});
+													}).catch(console.error); break;
+												case 'BAN':
+													let configBan=CONFIG.Banned_Message.replace(/%SPOOFSERVER%/g, foundServers).replace(/%SERVERNAME%/g, CONFIG.Home_Server_Names[index]);
+													let banMessage=new Discord.RichEmbed().setColor('ff0000')
+														.setThumbnail('https://i.imgur.com/Qa1ik69.jpg?1')
+														.setDescription(configBan)
+														.setFooter(postTime(CONFIG.Timezone));
+													EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+														TARGET.send(banMessage).catch(console.error).then( m => {
+															TARGET.ban('Member of a spoofing server.').catch(console.error);
+															let banConfirmation=new Discord.RichEmbed().setColor('00ff00')
+																.setDescription('Banned '+TARGET+'.')
+																.setFooter(postTime(CONFIG.Timezone));
+															return EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(banConfirmation).catch(console.error);
+														});
+													}).catch(console.error); break;
+												default:
+													EXECUTIONER.guilds.get(CONFIG.Home_Server_ID[index]).fetchMember(member.id).then( TARGET => {
+														return;
+													}).catch(console.error);
+											}
+										}
+										else{
+											// SEND CONFIRMATION THAT THEY HAVE LEFT THE SPOOF SERVER
+											EXECUTIONER.guilds.get(guildID).fetchMember(member.id).then( TARGET => {
+												let configLeft=CONFIG.Left_Spoof_Message.replace(/%SPOOFSERVER%/g, foundServers).replace(/%SERVERNAME%/g, CONFIG.Home_Server_Names[index]);
+												let leftMessage=new Discord.RichEmbed().setColor('00ff00')
+													.setThumbnail('https://i.imgur.com/UtIms4t.jpg')
+													.setDescription(configLeft)
+													.setFooter(postTime(CONFIG.Timezone));
+												TARGET.send(leftMessage).catch(console.error);
+											}).catch(console.error);
+										}
+									});
+								}
+							}, 60000 * CONFIG.Minutes_Til_Punish);
+						});
+					}
+				}
+			});
 		}
-	}
+	});
 });
 
 USERBOT.on('guildMemberRemove', member => {
 	if(CONFIG.Whitelist.indexOf(member.id)>=0){return;}
-	let foundServers=checkUser(member.id), guild=member.guild, richEmbed='', uName='';
-	let userInHomeServer=USERBOT.guilds.get(CONFIG.Home_Server_ID).members.get(member.id);
-	if(member.nickname){ uName=member.nickname; } else{ uName=member.user.username; }
-	if(!userInHomeServer){return;}
-	else{
-		if(foundServers){
-			richEmbed=new Discord.RichEmbed().setColor('ffa100')
-				.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
-				.setTitle('Member has left '+member.guild.name)
-				.addField('Remaining Blacklisted Server(s):', foundServers, false)
-				.setFooter(postTime(CONFIG.Timezone));
-			return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
+	if(CONFIG.Whitelist.indexOf(member.id)>=0){ return; }
+	CONFIG.Home_Server_IDs.forEach((guildID,index) => {
+		let guildMember=USERBOT.guilds.get(guildID).members.get(member.id);
+		if(guildMember){
+			checkUser(member.id).then(function(foundServers){
+				let guild=member.guild, richEmbed='', uName='';
+				// GET NICKNAME OR USE USERNAME
+				if(member.nickname){ uName=member.nickname; }	else{ uName=member.user.username; }
+				if(foundServers){
+					let stillInServers=new Discord.RichEmbed().setColor('ffa100')
+						.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+						.setTitle('Member has left '+member.guild.name)
+						.addField('Remaining Blacklisted Server(s):', foundServers, false)
+						.setFooter(postTime(CONFIG.Timezone));
+					return EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(stillInServers).catch(console.error);
+				}
+				else{
+					if(!foundServers){
+						let leftAllServers=new Discord.RichEmbed().setColor('00ff00')
+							.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+							.setTitle('No longer a member of any Blacklisted Servers.')
+							.setFooter(postTime(CONFIG.Timezone));
+						return EXECUTIONER.channels.get(CONFIG.Command_Channels[index]).send(leftAllServers).catch(console.error);
+					}
+				}
+			});
 		}
-		else{
-			if(!foundServers){
-				richEmbed=new Discord.RichEmbed().setColor('00ff00')
-					.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
-					.setTitle('No longer a member of any Blacklisted Servers.')
-					.setFooter(postTime(CONFIG.Timezone));
-				return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
-			}
-		}
-	}
+	});
 });
 
 USERBOT.on('message', message => {
-	if(message.channel.id!=CONFIG.Command_Channel){return;}
+	if(CONFIG.Command_Channels.indexOf(message.channel.id)<0){ return; }
 	if(!message.content.startsWith(CONFIG.Prefix)){return;}
 	let richEmbed='', badServer='', guild=message.member.guild, uName='';
 	if(message.member.roles.has(CONFIG.AdminRoleID) || message.member.roles.has(CONFIG.ModRoleID) || message.member.id===CONFIG.Owner_ID){
 		let args=message.content.split(' ').slice(1), command=message.content.split(' ')[0].slice(CONFIG.Prefix.length);
-		if(command==='status'){
-			richEmbed=new Discord.RichEmbed().setColor('00ff00')
-				.setTitle('**Operational. Standing By.**');
-			return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
-		}
-		if(command=='help' || command=='commands'){
-			if(!args[0]){
-				richEmbed=new Discord.RichEmbed().setColor('00ff00')
-					.setTitle('**Available Commands**').setThumbnail(USERBOT.LEFT_IMG)
-					.setDescription('`'+CONFIG.Prefix+'check @mention or userid`\n`'+CONFIG.Prefix+'check @JohnDoe#1234`\n`'+CONFIG.Prefix+'check 237597448032354304`\n`'+CONFIG.Prefix+'check all`\n`'+CONFIG.Prefix+'check all sudo`\n');
-				return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
-			}
-		}
+		// if(command==='status'){
+		// 	richEmbed=new Discord.RichEmbed().setColor('00ff00')
+		// 		.setTitle('**Operational. Standing By.**');
+		// 	return EXECUTIONER.channels.get(CONFIG.Command_Channels[s]).send(richEmbed).catch(console.error);
+		// }
+		// if(command=='bhelp' || command=='commands'){
+		// 	if(!args[0]){
+		// 		richEmbed=new Discord.RichEmbed().setColor('00ff00')
+		// 			.setTitle('**Available Commands**').setThumbnail(USERBOT.LEFT_IMG)
+		// 			.setDescription('`'+CONFIG.Prefix+'check @mention or userid`\n`'+CONFIG.Prefix+'check @JohnDoe#1234`\n`'+CONFIG.Prefix+'check 237597448032354304`\n`'+CONFIG.Prefix+'check all`\n`'+CONFIG.Prefix+'check all sudo`\n');
+		// 		return EXECUTIONER.channels.get(CONFIG.Command_Channels[s]).send(richEmbed).catch(console.error);
+		// 	}
+		// }
 		if(command=='check'){
 			let member=message.guild.members.get(args[0]), badMembers=0;
 			if(member){if(member.nickname){uName=member.nickname;}else{uName=member.user.username;}}
 			if(args[0]=='server' || args[0]=='all'){
+				console.log('[Blacklist] Beginning Check of Entire Server.')
 				let members=message.guild.members.map(m => m.id);
 				members.forEach(function(id,index){
 					if(CONFIG.Whitelist.indexOf(id)<0 || args[1]=='sudo'){
-						let foundServers=checkUser(id);
-						if(foundServers){
-							let uName=''; badMembers++;
-							EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(id).then( TARGET => {
-								if(TARGET.nickname){ uName=TARGET.nickname; } else{ uName=TARGET.user.username; }
-								let alertMessage=new Discord.RichEmbed().setColor('ff0000')
-									.setAuthor(uName+' ('+TARGET.id+')', TARGET.user.displayAvatarURL)
-									.setDescription('Tag: '+TARGET)
-									.addField('Blacklisted Server(s):', foundServers, false)
-									.setFooter(postTime(CONFIG.Timezone));
-								return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(alertMessage).catch(console.error);
-							}).catch(console.error);
-						}
+						checkUser(id).then(function(foundServers){
+							if(foundServers){
+								let uName=''; badMembers++;
+								EXECUTIONER.guilds.get(message.guild.id).fetchMember(id).then( TARGET => {
+									if(TARGET.nickname){ uName=TARGET.nickname; } else{ uName=TARGET.user.username; }
+									let alertMessage=new Discord.RichEmbed().setColor('ff0000')
+										.setAuthor(uName+' ('+TARGET.id+')', TARGET.user.displayAvatarURL)
+										.setDescription('Tag: '+TARGET)
+										.addField('Blacklisted Server(s):', foundServers, false)
+										.setFooter(postTime(CONFIG.Timezone));
+									EXECUTIONER.channels.get(message.channel.id).send(alertMessage).catch(console.error);
+								}).catch(console.error);
+							}
+						});
 					}
 				});
-				if(badMembers==0){
-					richEmbed=new Discord.RichEmbed().setColor('00ff00')
-						.setAuthor('No Members were found in Blacklisted Servers').setFooter(postTime(CONFIG.Timezone));
-					return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
-				}
-				else{
+				if(badMembers>0){
 					richEmbed=new Discord.RichEmbed().setColor('ff0000')
 						.setAuthor(badMembers+' Members were found in Blacklisted Servers').setFooter(postTime(CONFIG.Timezone));
-					return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
+					return EXECUTIONER.channels.get(message.channel.id).send(richEmbed).catch(console.error);
 				}
 			}
 			else if(isNaN(args[0])==false && args[0].length==18){
 				EXECUTIONER.fetchUser(args[0]).then( user => {
 					if(CONFIG.Whitelist.indexOf(user.id)>=0 && args[1]!='sudo'){
 						richEmbed=new Discord.RichEmbed().setColor('ff0000').setAuthor('That user is whitelisted.');
-						return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
+						return EXECUTIONER.channels.get(message.channel.id).send(richEmbed).catch(console.error);
 					}
-					let foundServers=checkUser(args[0]);
-					if(member){
-						if(foundServers){
-							EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(args[0]).then( TARGET => {
-								let badUser=new Discord.RichEmbed().setColor('ff0000')
-									.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
-									.setDescription('Tag: '+TARGET)
-									.addField('Blacklisted Server(s):', foundServers, false)
-									.setFooter(postTime(CONFIG.Timezone));
-								return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(badUser).catch(console.error);
-							}).catch(console.error);
-						}
-						else{
-							let goodUser=new Discord.RichEmbed().setColor('00ff00').setThumbnail(USERBOT.APPROVED_IMG)
-								.setAuthor(uName+' ('+member.id+')', user.displayAvatarURL)
-								.setTitle('Not a member of any Blacklisted Servers.')
-								.setFooter(postTime(CONFIG.Timezone));
-							return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(goodUser).catch(console.error);
-						}
-					}
-					else{
+					checkUser(user.id).then(function(foundServers){
+						if(member){
 							if(foundServers){
-								let badUser=new Discord.RichEmbed().setColor('ff0000')
-									.setAuthor(user.username+' ('+user.id+')', user.displayAvatarURL)
-									.addField('Blacklisted Server(s):', foundServers, false)
-									.setFooter(postTime(CONFIG.Timezone));
-								return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(badUser).catch(console.error);
+								EXECUTIONER.guilds.get(message.guild.id).fetchMember(args[0]).then( TARGET => {
+									let badUser=new Discord.RichEmbed().setColor('ff0000')
+										.setAuthor(uName+' ('+member.id+')', member.user.displayAvatarURL)
+										.setDescription('Tag: '+TARGET)
+										.addField('Blacklisted Server(s):', foundServers, false)
+										.setFooter(postTime(CONFIG.Timezone));
+									return EXECUTIONER.channels.get(message.channel.id).send(badUser).catch(console.error);
+								}).catch(console.error);
 							}
 							else{
 								let goodUser=new Discord.RichEmbed().setColor('00ff00').setThumbnail(USERBOT.APPROVED_IMG)
-									.setAuthor(user.username+' ('+user.id+')', user.displayAvatarURL)
+									.setAuthor(uName+' ('+member.id+')', user.displayAvatarURL)
 									.setTitle('Not a member of any Blacklisted Servers.')
 									.setFooter(postTime(CONFIG.Timezone));
-								return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(goodUser).catch(console.error);
+								return EXECUTIONER.channels.get(message.channel.id).send(goodUser).catch(console.error);
 							}
-					}
+						}
+						else{
+								if(foundServers){
+									let badUser=new Discord.RichEmbed().setColor('ff0000')
+										.setAuthor(user.username+' ('+user.id+')', user.displayAvatarURL)
+										.addField('Blacklisted Server(s):', foundServers, false)
+										.setFooter(postTime(CONFIG.Timezone));
+									return EXECUTIONER.channels.get(message.channel.id).send(badUser).catch(console.error);
+								}
+								else{
+									let goodUser=new Discord.RichEmbed().setColor('00ff00').setThumbnail(USERBOT.APPROVED_IMG)
+										.setAuthor(user.username+' ('+user.id+')', user.displayAvatarURL)
+										.setTitle('Not a member of any Blacklisted Servers.')
+										.setFooter(postTime(CONFIG.Timezone));
+									return EXECUTIONER.channels.get(message.channel.id).send(goodUser).catch(console.error);
+								}
+						}
+					});
 				}).catch(console.error);
 			}
 			else{
 				richEmbed=new Discord.RichEmbed().setColor('ff0000').setAuthor('That is not a valid check option.');
-				return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
+				return EXECUTIONER.channels.get(message.channel.id).send(richEmbed).catch(console.error);
 			}
 		}
-		if(command=='warn'){
-			let member=USERBOT.guilds.get(CONFIG.Home_Server_ID).members.get(args[0]);
-			let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/gXw71sr.jpg?1')
-				.setDescription('Good Afternoon. We have recently found **Team Rocket HQ : after hours ™** to be a spoofing app support server and it is now blacklisted. If you wish to stay a member of **'+CONFIG.Home_Server_Name+'**, you will need to leave that server in the next 2 hours. Please contact an Admin if you have any questions. Have a good day!');
-			EXECUTIONER.guilds.get(CONFIG.Home_Server_ID).fetchMember(args[0]).then( TARGET => {
- 				TARGET.send(warnMessage).catch(console.error);
-				EXECUTIONER.channels.get(CONFIG.Command_Channel).send('Warned '+TARGET+'.').catch(console.error);
- 			}).catch(console.error);
-		}
-		else if(command=='restart'){
+		// if(command=='warn'){
+		// 	let member=USERBOT.guilds.get(CONFIG.Home_Server_IDs).members.get(args[0]);
+		// 	let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/gXw71sr.jpg?1')
+		// 		.setDescription('Good Afternoon. We have recently found **Team Rocket HQ : after hours ™** to be a spoofing app support server and it is now blacklisted. If you wish to stay a member of **'+CONFIG.Home_Server_Name+'**, you will need to leave that server in the next 2 hours. Please contact an Admin if you have any questions. Have a good day!');
+		// 	EXECUTIONER.guilds.get(CONFIG.Home_Server_IDs).fetchMember(args[0]).then( TARGET => {
+ 		// 		TARGET.send(warnMessage).catch(console.error);
+		// 		EXECUTIONER.channels.get(CONFIG.Command_Channels).send('Warned '+TARGET+'.').catch(console.error);
+ 		// 	}).catch(console.error);
+		// }
+		if(command=='restart'){
 			process.exit(1).catch(console.error);
 		}
 	}
 	else{
 		richEmbed=new Discord.RichEmbed().setColor('ff0000').setAuthor('You do not have permission to use that command.');
-		return EXECUTIONER.channels.get(CONFIG.Command_Channel).send(richEmbed).catch(console.error);
+		return EXECUTIONER.channels.get(message.channel.id).send(richEmbed).catch(console.error);
 	}
 });
+
+function blacklistAlert(embed,user){
+	for(let s=0; s<CONFIG.Home_Server_IDs; s++){
+		let member=USERBOT.guilds.get(CONFIG.Home_Server_IDs[s]).members.get(user.id);
+		if(member){ EXECUTIONER.channels.get(CONFIG.Command_Channels[s]).send(richEmbed).catch(console.error); }
+	}
+}
 
 // BOT LOGIN TO DISCORD
 USERBOT.login(CONFIG.User_Token); EXECUTIONER.login(CONFIG.Bot_Token);
