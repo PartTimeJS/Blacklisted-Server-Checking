@@ -239,10 +239,10 @@ USERBOT.on('guildMemberAdd', member => {
 });
 
 USERBOT.on('guildMemberRemove', member => {
-	if(CONFIG.Whitelist.indexOf(member.id)>=0){return;}
 	if(CONFIG.Whitelist.indexOf(member.id)>=0){ return; }
+	if(CONFIG.Home_Server_IDs.indexOf(member.guild.id)>=0){ return; }
 	CONFIG.Home_Server_IDs.forEach((guildID,index) => {
-		let guildMember=USERBOT.guilds.get(guildID).members.get(member.id);
+		let guildMember = USERBOT.guilds.get(guildID).members.get(member.id);
 		if(guildMember){
 			checkUser(member.id).then(function(foundServers){
 				let guild=member.guild, richEmbed='', uName='';
@@ -270,11 +270,11 @@ USERBOT.on('guildMemberRemove', member => {
 	});
 });
 
-USERBOT.on('message', message => {
-	if(CONFIG.Command_Channels.indexOf(message.channel.id)<0){ return; }
+EXECUTIONER.on('message', message => {
 	if(!message.content.startsWith(CONFIG.Prefix)){return;}
+	if(CONFIG.Command_Channels.indexOf(message.channel.id)<0){ return; }
 	let richEmbed='', badServer='', guild=message.member.guild, uName='';
-	if(message.member.roles.has(CONFIG.AdminRoleID) || message.member.roles.has(CONFIG.ModRoleID) || message.member.id===CONFIG.Owner_ID){
+	if(message.member.hasPermission('ADMINISTRATOR') || mesage.member.hasPermission('MANAGE_ROLES') || message.memeber.id===BOT.OwnerID){
 		let args=message.content.split(' ').slice(1), command=message.content.split(' ')[0].slice(CONFIG.Prefix.length);
 		// if(command==='status'){
 		// 	richEmbed=new Discord.RichEmbed().setColor('00ff00')
@@ -369,15 +369,15 @@ USERBOT.on('message', message => {
 				return EXECUTIONER.channels.get(message.channel.id).send(richEmbed).catch(console.error);
 			}
 		}
-		// if(command=='warn'){
-		// 	let member=USERBOT.guilds.get(CONFIG.Home_Server_IDs).members.get(args[0]);
-		// 	let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/gXw71sr.jpg?1')
-		// 		.setDescription('Good Afternoon. We have recently found **Team Rocket HQ : after hours ™** to be a spoofing app support server and it is now blacklisted. If you wish to stay a member of **'+CONFIG.Home_Server_Name+'**, you will need to leave that server in the next 2 hours. Please contact an Admin if you have any questions. Have a good day!');
-		// 	EXECUTIONER.guilds.get(CONFIG.Home_Server_IDs).fetchMember(args[0]).then( TARGET => {
- 		// 		TARGET.send(warnMessage).catch(console.error);
-		// 		EXECUTIONER.channels.get(CONFIG.Command_Channels).send('Warned '+TARGET+'.').catch(console.error);
- 		// 	}).catch(console.error);
-		// }
+		if(command=='warn'){
+			let member=USERBOT.guilds.get(message.guild.id).members.get(args[0]);
+			let warnMessage=new Discord.RichEmbed().setColor('ff0000').setThumbnail('https://i.imgur.com/gXw71sr.jpg?1')
+				.setDescription('Good Afternoon. We have recently found **BMPGo** to be a spoofing app support server and it is now blacklisted. If you wish to stay a member of **'+message.guild.name+'**, you will need to leave that server in the next 2 hours. Please contact an Admin if you have any questions. Have a good day!');
+			EXECUTIONER.guilds.get(message.guild.id).fetchMember(args[0]).then( TARGET => {
+ 				TARGET.send(warnMessage).catch(console.error);
+				EXECUTIONER.channels.get(CONFIG.Command_Channels).send('Warned '+TARGET+'.').catch(console.error);
+ 			}).catch(console.error);
+		}
 		if(command=='restart'){
 			process.exit(1).catch(console.error);
 		}
