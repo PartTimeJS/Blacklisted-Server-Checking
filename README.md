@@ -5,6 +5,7 @@
 2: Fill out `blacklist_config.json.example` in files and rename to `blacklist_config.json`. 
 - The user bot token must be the bot you just created. Google "How to get discord user token" for how to get a user token. The bot token must be a bot in your server with rights to kick or ban members based on your config settings. 
 - `POUND_LEVEL` in the config can either be `KICK` or `BAN`.
+- Home Servers and Home Server IDs are an array, so you can add as many as you would like. This bot is multi-server capable.
 - Add `%SPOOFSERVER%` anywhere in the config message to name the server the blacklisted server they have joined. **DO NOT** user this for the `Joined_My_Server_While_In_Spoof_Servers_Warning` config as they may be in multiple blasklisted servers when they join your server. 
 
 3: Install node.js if not alread on your machine. 
